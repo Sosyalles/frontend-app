@@ -1,0 +1,87 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "title": "Tech Summit 2025",
+      "location": "Silicon Valley Convention Center, San Francisco, CA",
+      "date": "Mar 15, 2025",
+      "category": "tech",
+      "attendees": 126,
+      "featured": true,
+      "image": "/images/tech-summit.jpg",
+      "description": "Join us for the most anticipated tech event of 2025! The Tech Innovation Summit brings together industry leaders, innovators, and tech enthusiasts for three days of cutting-edge discussions, workshops, and networking opportunities. Discover the latest trends in AI, blockchain, and emerging technologies.",
+      "price": 299,
+      "startTime": "9:00 AM",
+      "endTime": "6:00 PM",
+      "organizer": {
+        "name": "TechForward Inc.",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=2",
+        "role": "Event Organizer"
+      },
+      "schedule": [
+        {
+          "day": "Day 1",
+          "events": [
+            {
+              "time": "9:00 AM - 10:30 AM",
+              "title": "Opening Keynote: Future of Technology",
+              "speaker": "Daniel Johnson, CEO of Tech Systems",
+              "type": "Keynote"
+            },
+            {
+              "time": "11:00 AM - 12:30 PM",
+              "title": "AI in Enterprise: Case Studies",
+              "type": "Panel Discussion"
+            }
+          ]
+        },
+        {
+          "day": "Day 2",
+          "events": [
+            {
+              "time": "9:00 AM - 10:30 AM",
+              "title": "Blockchain Revolution",
+              "type": "Workshop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Summer Music Festival",
+      "location": "Central Park, Los Angeles, NY",
+      "date": "Jul 20, 2025",
+      "category": "music",
+      "attendees": 586,
+      "image": "/images/music-festival.jpg",
+      "description": "Experience the ultimate summer music festival featuring top artists from around the world. Three days of non-stop music, food, and entertainment in the heart of Los Angeles.",
+      "price": 199,
+      "startTime": "12:00 PM",
+      "endTime": "11:00 PM",
+      "organizer": {
+        "name": "LA Events Co.",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=3",
+        "role": "Festival Organizer"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Startup Networking",
+      "location": "Innovation Hub, New York, NY",
+      "date": "Apr 5, 2025",
+      "category": "business",
+      "attendees": 500,
+      "image": "/images/networking.jpg",
+      "description": "Connect with fellow entrepreneurs, investors, and industry experts at this exclusive networking event. Share ideas, find potential partners, and explore new opportunities.",
+      "price": 149,
+      "startTime": "6:00 PM",
+      "endTime": "9:00 PM",
+      "organizer": {
+        "name": "Startup Network NYC",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=4",
+        "role": "Business Network"
+      }
+    }
+  ]
+} 

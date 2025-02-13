@@ -1,0 +1,47 @@
+### **Objective**  
+Build a **fast, lightweight, and maintainable** React frontend for a social networking platform using **TypeScript**. The focus is on **performance, security, and modularity**, following **SOLID principles** while keeping dependencies minimal.  
+
+---
+
+### **1. Core Setup**  
+- **React + TypeScript** for strong typing.  
+- **Minimal dependencies** (avoid unnecessary third-party libraries).  
+- **Efficient project structure** for easy scalability.  
+
+---
+
+### **2. Performance & Optimization**  
+- **Lazy-loading** for components & images.  
+- **Memoization** (`React.memo`, `useMemo`, `useCallback`) to prevent re-renders.  
+- **Code-splitting** via React Suspense & dynamic imports.  
+- **Optimized API requests** (batching, caching, and debouncing).  
+
+---
+
+### **3. State & API Management**  
+- **Context API** for lightweight state management.  
+- **Axios or Fetch** with request/response interceptors.  
+- **Centralized error handling** for API failures.  
+
+---
+
+### **4. UI & Styling**  
+- **Tailwind CSS** for clean, efficient styling.  
+- **Dark mode support**.  
+- **Mobile-first design** with a responsive layout.  
+
+---
+
+### **5. Security**  
+- **JWT-based authentication** (tokens stored in HttpOnly cookies).  
+- **Input sanitization** to prevent XSS attacks.  
+
+### **7. Expected Output**  
+- A **fast, modular, and scalable** frontend.  
+- **Minimal dependencies** and **optimized performance**.  
+- **Clean, maintainable code** with strong typing.  
+- **Secure and responsive UI** with seamless user experience.  
+
+---
+
+Generate a frontend with these principles, ensuring **simplicity, speed, and efficiency**.  

@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "music",
+      "name": "Music",
+      "icon": "🎵"
+    },
+    {
+      "id": "sports",
+      "name": "Sports",
+      "icon": "⚽"
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "icon": "💼"
+    },
+    {
+      "id": "tech",
+      "name": "Tech",
+      "icon": "💻"
+    },
+    {
+      "id": "art",
+      "name": "Art",
+      "icon": "🎨"
+    },
+    {
+      "id": "social",
+      "name": "Social",
+      "icon": "🤝"
+    }
+  ]
+} 

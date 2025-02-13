@@ -1,0 +1,39 @@
+Bu promptu çok daha sade bir hale getirerek net ve anlaşılır bir şekilde sunuyorum:
+
+---
+
+**🚀 Frontend Prompt for Sosyalleş Web App (Optimized & Minimal)**  
+
+### **1️⃣ Teknoloji Seçimi**  
+- **React (TypeScript)**: Performans ve güvenlik için.  
+- **Next.js** (SSR & SEO) veya **Vite + React** (Hızlı geliştirme).  
+- **Tailwind CSS**: Hafif ve esnek tasarım.  
+
+### **2️⃣ Ana Özellikler**  
+- **Giriş/Kayıt** → E-posta ile giriş + şifre sıfırlama.  
+- **Etkinlik Akışı** → Şehir, mesafe, kategori filtreleriyle etkinlikleri göster.  
+- **Profil & Beğeni** → Çift tıklama ile profilleri/beğenileri işaretle.  
+- **Etkinlik Katılımı** → Katılım isteği gönderme & organizatör onayı.  
+- **Mesajlaşma (Opsiyonel)** → Sadece eşleşenler sohbet edebilir.  
+
+### **3️⃣ UI/UX & Stil**  
+- **Mobil Öncelikli Tasarım**: Dikey kaydırma + masaüstü için geniş alan kullanımı.  
+- **Çift Tıklama ile Beğeni** (TikTok/Instagram benzeri).  
+- **Minimal & Hızlı Arayüz**: Kategori bazlı filtreleme, okunaklı tipografi.  
+
+### **4️⃣ Veri Yönetimi & API Entegrasyonu**  
+- **Context API** (hafif state yönetimi).  
+- **Axios + Interceptor** (API çağrıları için).  
+- **JWT ile Güvenli Kimlik Doğrulama** (HttpOnly Cookie).  
+
+### **5️⃣ Performans & Optimizasyon**  
+- **Lazy Loading & Code Splitting** ile hızlı yükleme.  
+- **React.memo & useCallback** ile gereksiz render’ları önleme.  
+- **API Caching & Debounce** ile daha az istek atma.  
+
+### **🎯 Beklenen Çıktı**  
+- **Hızlı, minimal, güvenli ve ölçeklenebilir** bir React tabanlı web uygulaması.  
+- **Optimize edilmiş UI/UX** → Akıcı bir keşif & etkileşim deneyimi.  
+- **Sade ve verimli kod yapısı** → SOLID prensipleriyle ölçeklenebilir tasarım.  
+
+Buna göre frontend oluştur ve **performans, güvenlik ve kullanıcı deneyimi** odaklı bir yapı kur. 🚀
