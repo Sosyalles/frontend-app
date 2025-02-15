@@ -1,4 +1,5 @@
 ### **Objective**  
+Tasarımları yaparken güncel UI/UX kütüphanelerini kullan ve modern tasarımlar yap.
 Build a **fast, lightweight, and maintainable** React frontend for a social networking platform using **TypeScript**. The focus is on **performance, security, and modularity**, following **SOLID principles** while keeping dependencies minimal.  
 
 ---

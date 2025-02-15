@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthenticatedNavbar } from '../layout/AuthenticatedNavbar';
 import { useAuth } from '../../contexts/AuthContext';
 
-export function CreateEvent() {
+export function CreateEvent(): JSX.Element {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,20 +40,14 @@ export function CreateEvent() {
     console.log('Selected Image:', selectedImage);
   };
 
-  if (!user) {
-    return navigate('/');
+  if (!currentUser) {
+    navigate('/');
+    return <></>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AuthenticatedNavbar
-        user={user}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onLogout={logout}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="md:grid md:grid-cols-3 md:gap-6">
           {/* Left Column - Form */}
           <div className="md:col-span-2">

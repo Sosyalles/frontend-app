@@ -24,15 +24,15 @@ const getCategoryImage = (category: string): string => {
 
 export function EventDetail({ event, onBack }: EventDetailProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, isAuthenticated, logout } = useAuth();
+  const { currentUser, isAuthenticated, logout } = useAuth();
   const eventImage = event.image || getCategoryImage(event.category);
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      {isAuthenticated && user ? (
+      {isAuthenticated && currentUser ? (
         <AuthenticatedNavbar
-          user={user}
+          user={currentUser}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onLogout={logout}

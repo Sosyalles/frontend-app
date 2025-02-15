@@ -3,7 +3,7 @@ import { User, ProfileUpdateData } from '../types/auth';
 import { AuthService } from '../services/auth.service';
 
 interface AuthContextType {
-  user: User | null;
+  currentUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (user: User) => void;
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthContext.Provider 
       value={{ 
-        user, 
+        currentUser: user, 
         isAuthenticated: !!user, 
         isLoading,
         login, 

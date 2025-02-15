@@ -19,6 +19,9 @@ import { useAuth } from './contexts/AuthContext'
 import { EditProfile } from './components/profile/EditProfile'
 import { ProtectedRoute } from './components/routing/ProtectedRoute'
 import './App.css'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { ThemeToggle } from './components/common/ThemeToggle'
+import { MainLayout } from './components/layout/MainLayout'
 
 const getCategoryImage = (category: string): string => {
   const categoryImages = {
@@ -51,7 +54,6 @@ function HomePage({
   navigate: (path: string) => void;
   setCurrentModal: (modal: 'signIn' | 'signUp' | 'forgotPassword' | null) => void;
 }) {
-  const { user, isAuthenticated, logout } = useAuth();
   const [activeFilters, setActiveFilters] = useState({
     date: 'all',
     location: 'all',
@@ -153,20 +155,6 @@ function HomePage({
 
   return (
     <>
-      {isAuthenticated && user ? (
-        <AuthenticatedNavbar
-          user={user}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onLogout={logout}
-        />
-      ) : (
-        <Navbar
-          onSignIn={() => setCurrentModal('signIn')}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      )}
       <HeroSection currentSlide={currentSlide} setCurrentModal={setCurrentModal} />
       <CategoriesSection
         categories={categoriesData.categories}
@@ -217,9 +205,6 @@ function HomePageWrapper({
 function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const { user, isAuthenticated, login, logout } = useAuth();
-  const [currentModal, setCurrentModal] = useState<'signIn' | 'signUp' | 'forgotPassword' | null>(null);
   const event = eventsData.events.find(e => e.id.toString() === id);
 
   if (!event) {
@@ -227,60 +212,21 @@ function EventDetailPage() {
   }
 
   return (
-    <>
-      {isAuthenticated && user ? (
-        <AuthenticatedNavbar
-          user={user}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onLogout={logout}
-        />
-      ) : (
-        <Navbar
-          onSignIn={() => setCurrentModal('signIn')}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      )}
-      <EventDetail
-        event={event}
-        onBack={() => navigate('/')}
-      />
-      {/* Modals */}
-      <SignInModal
-        isOpen={currentModal === 'signIn'}
-        onClose={() => setCurrentModal(null)}
-        onForgotPassword={() => setCurrentModal('forgotPassword')}
-        onSignUp={() => setCurrentModal('signUp')}
-        onSuccess={(user) => {
-          login(user);
-          setCurrentModal(null);
-        }}
-      />
-      <SignUpModal
-        isOpen={currentModal === 'signUp'}
-        onClose={() => setCurrentModal(null)}
-        onBackToSignIn={() => setCurrentModal('signIn')}
-        onSuccess={(user) => {
-          login(user);
-          setCurrentModal(null);
-        }}
-      />
-      <ForgotPasswordModal
-        isOpen={currentModal === 'forgotPassword'}
-        onClose={() => setCurrentModal(null)}
-        onBackToSignIn={() => setCurrentModal('signIn')}
-      />
-    </>
+    <EventDetail
+      event={event}
+      onBack={() => navigate('/')}
+    />
   );
 }
 
-function App() {
+// AppContent component to use hooks inside Router
+function AppContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [currentModal, setCurrentModal] = useState<'signIn' | 'signUp' | 'forgotPassword' | null>(null)
   const [currentSlide, setCurrentSlide] = useState(0)
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { currentUser, isAuthenticated, login, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Background slider animation
   useEffect(() => {
@@ -291,54 +237,75 @@ function App() {
   }, [])
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/" element={<HomePageWrapper
+    <MainLayout onModalChange={setCurrentModal}>
+      <Routes>
+        <Route path="/" element={
+          <HomePageWrapper
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             currentSlide={currentSlide}
             setCurrentModal={setCurrentModal}
-          />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<UserProfile user={user!} />} />
-            <Route path="/edit-profile" element={<EditProfile user={user!} />} />
-            <Route path="/create-event" element={<CreateEvent />} />
-          </Route>
-          <Route path="/event/:id" element={<EventDetailPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          />
+        } />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/profile/:username" element={<UserProfile />} />
+          <Route path="/profile" element={
+            currentUser ? (
+              <Navigate to={`/profile/@${currentUser.username}`} replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } />
+          <Route path="/edit-profile" element={<EditProfile user={currentUser!} />} />
+          <Route path="/create-event" element={<CreateEvent />} />
+        </Route>
+        <Route path="/event/:id" element={<EventDetailPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
-        {/* Modals */}
-        <SignInModal
-          isOpen={currentModal === 'signIn'}
-          onClose={() => setCurrentModal(null)}
-          onForgotPassword={() => setCurrentModal('forgotPassword')}
-          onSignUp={() => setCurrentModal('signUp')}
-          onSuccess={(user) => {
-            login(user);
-            setCurrentModal(null);
-          }}
-        />
-        <SignUpModal
-          isOpen={currentModal === 'signUp'}
-          onClose={() => setCurrentModal(null)}
-          onBackToSignIn={() => setCurrentModal('signIn')}
-          onSuccess={(user) => {
-            login(user);
-            setCurrentModal(null);
-          }}
-        />
-        <ForgotPasswordModal
-          isOpen={currentModal === 'forgotPassword'}
-          onClose={() => setCurrentModal(null)}
-          onBackToSignIn={() => setCurrentModal('signIn')}
-        />
-      </div>
-    </Router>
-  )
+      <ThemeToggle />
+
+      {/* Modals */}
+      <SignInModal
+        isOpen={currentModal === 'signIn'}
+        onClose={() => setCurrentModal(null)}
+        onForgotPassword={() => setCurrentModal('forgotPassword')}
+        onSignUp={() => setCurrentModal('signUp')}
+        onSuccess={(newUser) => {
+          login(newUser);
+          setCurrentModal(null);
+        }}
+      />
+      <SignUpModal
+        isOpen={currentModal === 'signUp'}
+        onClose={() => setCurrentModal(null)}
+        onBackToSignIn={() => setCurrentModal('signIn')}
+        onSuccess={(newUser) => {
+          login(newUser);
+          setCurrentModal(null);
+        }}
+      />
+      <ForgotPasswordModal
+        isOpen={currentModal === 'forgotPassword'}
+        onClose={() => setCurrentModal(null)}
+        onBackToSignIn={() => setCurrentModal('signIn')}
+      />
+    </MainLayout>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <Router>
+      <ThemeProvider>
+        <div className="min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white transition-colors duration-200">
+          <AppContent />
+        </div>
+      </ThemeProvider>
+    </Router>
+  );
+}
+
+export default App;
