@@ -1,27 +1,27 @@
 export interface User {
   id: number;
-  email: string;
   username: string;
+  email: string;
   firstName: string;
   lastName: string;
-  profilePhoto: string;
+  profilePhoto?: string;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
   bio?: string;
   location?: string;
-  interests?: string[];
-  socialLinks?: {
-    instagram?: string;
-    twitter?: string;
-    linkedin?: string;
-    facebook?: string;
+  interests: string[];
+  socialLinks: {
+    instagram: string | null;
+    twitter: string | null;
+    linkedin: string | null;
+    facebook: string | null;
   };
-  notificationPreferences?: {
+  notificationPreferences: {
     emailNotifications: boolean;
     pushNotifications: boolean;
     weeklyRecommendations: boolean;
   };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthResponse {
@@ -57,4 +57,13 @@ export interface ErrorResponse {
   code: number;
   message: string;
   details?: any;
+}
+
+export interface AuthContextType {
+  currentUser: User | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  register: (credentials: RegisterCredentials) => Promise<void>;
+  isAuthenticated: () => boolean;
+  updateProfile: (data: ProfileUpdateData) => Promise<void>;
 } 
