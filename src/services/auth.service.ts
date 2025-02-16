@@ -1,70 +1,31 @@
-import { AuthResponse, LoginCredentials, RegisterCredentials, User } from '../types/auth';
+import { AuthResponse, LoginCredentials, RegisterCredentials, User, UserDetail, ApiResponse } from '../types/auth';
 import { logger } from '../utils/logger';
+import { api } from '../lib/axios';
 
 const API_URL = 'http://localhost:3000/api';
 const AUTH_TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user';
+const BASE_URL = 'http://localhost:3000';
 
 
 export const AuthService = {
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const startTime = Date.now();
+  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
     try {
-      logger.debug('Attempting login', { email: credentials.email });
+      const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', { email, password });
 
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      logger.logAPIRequest('POST', '/auth/login', response.status, Date.now() - startTime);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          const error = new Error('Invalid credentials');
-          logger.logAuthAttempt(credentials.email, false, error);
-          throw error;
-        } else if (response.status === 429) {
-          const error = new Error('Too many login attempts. Please try again later.');
-          logger.logAuthAttempt(credentials.email, false, error);
-          throw error;
-        }
-        const error = new Error('Login failed');
-        logger.logAuthAttempt(credentials.email, false, error);
-        throw error;
+      if (response.data && response.data.data) {
+        localStorage.setItem(AUTH_TOKEN_KEY, response.data.data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(response.data.data.user));
       }
 
-      const responseData = await response.json();
-      logger.debug('Login response:', responseData);
-
-      // Handle different response formats
-      const authData = responseData.data || responseData;
-      const token = authData.accessToken || authData.token;
-      const user = authData.user || authData;
-
-      if (!token || !user) {
-        logger.error('Response format:', responseData);
-        throw new Error('Invalid response format from server');
-      }
-
-      // Store auth data
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-
-      logger.logAuthAttempt(credentials.email, true);
-      logger.info('User logged in successfully', { userId: user.id });
-
-      return {
-        token,
-        user
-      };
+      return response.data;
     } catch (error) {
-      const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
-      logger.logAPIError('POST', '/auth/login', finalError);
-      throw finalError;
+      if (error instanceof Error) {
+        logger.error('Login failed:', { error: error.message });
+      } else {
+        logger.error('Login failed:', { error: 'Unknown error' });
+      }
+      throw error;
     }
   },
 
@@ -73,43 +34,19 @@ export const AuthService = {
     try {
       logger.debug('Attempting registration', { email: credentials.email });
 
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
+      const response = await api.post('/users/register', credentials);
 
-      logger.logAPIRequest('POST', '/auth/register', response.status, Date.now() - startTime);
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          const error = new Error('Email or username already exists');
-          logger.logAuthAction('register', 0, false, error);
-          throw error;
-        } else if (response.status === 400) {
-          const error = new Error('Invalid input or validation error');
-          logger.logAuthAction('register', 0, false, error);
-          throw error;
-        } else if (response.status === 429) {
-          const error = new Error('Too many requests. Please try again later.');
-          logger.logAuthAction('register', 0, false, error);
-          throw error;
-        }
-        const error = new Error('Registration failed');
-        logger.logAuthAction('register', 0, false, error);
-        throw error;
+      if (!response.data) {
+        throw new Error('Registration failed');
       }
 
-      const responseData = await response.json();
-      logger.debug('Registration response:', responseData);
+      logger.debug('Registration response:', response.data);
       logger.info('User registered successfully');
 
-      return responseData;
+      return response.data;
     } catch (error) {
       const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
-      logger.logAPIError('POST', '/auth/register', finalError);
+      logger.logAPIError('POST', '/users/register', finalError);
       throw finalError;
     }
   },
@@ -123,7 +60,6 @@ export const AuthService = {
   },
 
   getCurrentUser: async (): Promise<User | null> => {
-    const startTime = Date.now();
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (!token) {
@@ -131,35 +67,25 @@ export const AuthService = {
         return null;
       }
 
-      const response = await fetch(`${API_URL}/users/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await api.get<ApiResponse<User>>('/users/profile');
 
-      logger.logAPIRequest('GET', '/users/profile', response.status, Date.now() - startTime);
+      if (response.data && response.data.data) {
+        const userData = response.data.data;
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          logger.warn('Session expired or invalid');
-          AuthService.logout();
-          return null;
+        // Profil fotoğrafı URL'lerini tam URL'ye çevir
+        if (userData.profilePhoto) {
+          userData.profilePhoto = `${BASE_URL}${userData.profilePhoto}`;
         }
-        throw new Error('Failed to get user profile');
+        if (userData.profilePhotos) {
+          userData.profilePhotos = userData.profilePhotos.map(photo => `${BASE_URL}${photo}`);
+        }
+
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+        logger.debug('Current user retrieved successfully', { userId: userData.id });
+        return userData;
       }
 
-      const responseData = await response.json();
-      logger.debug('Profile response:', responseData);
-
-      const userData = responseData.data || responseData;
-      
-      if (!userData) {
-        throw new Error('Invalid profile response format');
-      }
-
-      localStorage.setItem(USER_KEY, JSON.stringify(userData));
-      logger.debug('Current user retrieved successfully', { userId: userData.id });
-      return userData;
+      return null;
     } catch (error) {
       const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
       logger.logAPIError('GET', '/users/profile', finalError);
@@ -167,148 +93,63 @@ export const AuthService = {
     }
   },
 
-  getDetailedProfile: async (): Promise<User | null> => {
-    const startTime = Date.now();
+  async updateProfileDetails(profileData: Partial<UserDetail>): Promise<ApiResponse<UserDetail>> {
     try {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (!token) {
-        logger.debug('No auth token found');
-        return null;
-      }
-
-      const storedUser = localStorage.getItem(USER_KEY);
-      const user = storedUser ? JSON.parse(storedUser) : null;
-      if (!user || !user.username) {
-        logger.debug('No user data found');
-        return null;
-      }
-
-      const response = await fetch(`${API_URL}/users/profile/details/${user.username}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      logger.logAPIRequest('GET', `/users/profile/details/${user.username}`, response.status, Date.now() - startTime);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          logger.warn('Session expired or invalid');
-          AuthService.logout();
-          return null;
-        }
-        throw new Error('Failed to get detailed profile');
-      }
-
-      const responseData = await response.json();
-      logger.debug('Detailed profile response:', responseData);
-
-      const userData = responseData.data || responseData;
-      
-      if (!userData) {
-        throw new Error('Invalid profile response format');
-      }
-
-      // Update stored user data with detailed information
-      localStorage.setItem(USER_KEY, JSON.stringify(userData));
-      logger.debug('Detailed profile retrieved successfully', { userId: userData.id });
-      return userData;
+      const response = await api.patch<ApiResponse<UserDetail>>('/api/v1/profile/detail', profileData);
+      return response.data;
     } catch (error) {
-      const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
-      logger.logAPIError('GET', '/users/profile/details', finalError);
-      return null;
+      if (error instanceof Error) {
+        logger.error('Error updating profile details', { error: error.message });
+      }
+      throw error;
+    }
+  },
+
+  async getDetailedProfile(): Promise<ApiResponse<User>> {
+    try {
+      const response = await api.get<ApiResponse<User>>('/users/profile/detail');
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Error fetching detailed profile', { error: error.message });
+      }
+      throw error;
+    }
+  },
+
+  async getUserProfile(username: string): Promise<ApiResponse<User>> {
+    try {
+      const cleanUsername = username.replace('@', '');
+      const response = await api.get<ApiResponse<User>>(`/users/profile/details/${cleanUsername}`);
+
+      if (!response.data || !response.data.data) {
+        throw new Error('User not found');
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Error fetching user profile', { error: error.message });
+      }
+      throw error;
     }
   },
 
   updateProfile: async (updates: Partial<User>): Promise<User> => {
-    const startTime = Date.now();
     try {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
       logger.debug('Attempting to update profile', { updates });
 
-      // Separate user and user detail updates
-      const userUpdates: any = {};
-      const userDetailUpdates: any = {};
+      // Profil bilgilerini güncelle
+      const response = await api.patch<ApiResponse<User>>('/users/profile', updates);
 
-      // Basic user fields
-      if (updates.firstName !== undefined) userUpdates.firstName = updates.firstName;
-      if (updates.lastName !== undefined) userUpdates.lastName = updates.lastName;
-      if (updates.username !== undefined) userUpdates.username = updates.username;
-      if (updates.email !== undefined) userUpdates.email = updates.email;
-
-      // User detail fields
-      if (updates.bio !== undefined) userDetailUpdates.bio = updates.bio;
-      if (updates.location !== undefined) userDetailUpdates.location = updates.location;
-      if (updates.interests !== undefined) userDetailUpdates.interests = updates.interests;
-      if (updates.socialLinks !== undefined) userDetailUpdates.socialMedia = updates.socialLinks;
-      if (updates.notificationPreferences !== undefined) userDetailUpdates.notificationPreferences = updates.notificationPreferences;
-
-      let userData = null;
-
-      // Only make user update request if there are user fields to update
-      if (Object.keys(userUpdates).length > 0) {
-        const userResponse = await fetch(`${API_URL}/users/profile`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(userUpdates),
-        });
-
-        logger.logAPIRequest('PATCH', '/users/profile', userResponse.status, Date.now() - startTime);
-
-        if (!userResponse.ok) {
-          if (userResponse.status === 401) {
-            logger.warn('Session expired or invalid');
-            AuthService.logout();
-            throw new Error('Session expired');
-          }
-          throw new Error('Failed to update user profile');
-        }
-
-        const userResponseData = await userResponse.json();
-        userData = userResponseData.data;
-      }
-
-      // Only make user detail update request if there are detail fields to update
-      if (Object.keys(userDetailUpdates).length > 0) {
-        const detailResponse = await fetch(`${API_URL}/users/profile/detail`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(userDetailUpdates),
-        });
-
-        logger.logAPIRequest('PATCH', '/users/profile/details', detailResponse.status, Date.now() - startTime);
-
-        if (!detailResponse.ok) {
-          if (detailResponse.status === 401) {
-            logger.warn('Session expired or invalid');
-            AuthService.logout();
-            throw new Error('Session expired');
-          }
-          throw new Error('Failed to update user details');
-        }
-
-        const detailResponseData = await detailResponse.json();
-        userData = { ...userData, ...detailResponseData.data };
-      }
-
-      // If we have updated data, update the stored user data
-      if (userData) {
+      if (response.data && response.data.data) {
+        const userData = response.data.data;
         localStorage.setItem(USER_KEY, JSON.stringify(userData));
         logger.info('Profile updated successfully', { userId: userData.id });
+        return userData;
       }
-      
-      // Return the updated user data or fetch fresh data if no updates were made
-      return userData || await AuthService.getCurrentUser();
+
+      throw new Error('Failed to update profile');
     } catch (error) {
       const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
       logger.logAPIError('PATCH', '/users/profile', finalError);
@@ -361,55 +202,95 @@ export const AuthService = {
   },
 
   uploadProfilePhotos: async (photos: File[]): Promise<string[]> => {
-    const startTime = Date.now();
     try {
+      // Dosya kontrolü
+      if (!photos || photos.length === 0) {
+        throw new Error('Lütfen en az bir fotoğraf seçin');
+      }
+
+      // Dosya boyutu ve format kontrolü
+      for (const photo of photos) {
+        if (photo.size > 5 * 1024 * 1024) { // 5MB
+          throw new Error('Fotoğraf boyutu 5MB\'dan küçük olmalıdır');
+        }
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(photo.type)) {
+          throw new Error('Sadece JPG, PNG ve WEBP formatları desteklenmektedir');
+        }
+      }
+
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (!token) {
-        const error = new Error('Not authenticated');
-        logger.error('Photo upload attempted without auth token', error);
-        throw error;
+        throw new Error('Oturum açmanız gerekiyor');
       }
 
       const formData = new FormData();
-      photos.forEach(photo => {
-        formData.append('photos', photo);
+      // Sadece ilk fotoğrafı yükle
+      const photo = photos[0];
+      formData.append('photos', photo);
+
+      logger.debug('Profil fotoğrafı yükleniyor', {
+        size: photo.size,
+        type: photo.type,
+        name: photo.name
       });
 
-      logger.debug('Uploading profile photos', { count: photos.length });
+      try {
+        // Profil fotoğrafını yükle
+        const uploadResponse = await api.post<ApiResponse<{ profilePhoto: string }>>('/users/profile/photos', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          },
+          timeout: 60000, // 60 saniye timeout
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity
+        });
 
-      const response = await fetch(`${API_URL}/users/profile/photos`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      logger.logAPIRequest('POST', '/users/profile/photos', response.status, Date.now() - startTime);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          AuthService.logout();
-          const error = new Error('Not authenticated');
-          logger.logAuthAction('upload_photos', 0, false, error);
-          throw error;
-        } else if (response.status === 400) {
-          const error = new Error('Invalid file format or size');
-          logger.logAuthAction('upload_photos', 0, false, error);
-          throw error;
+        if (uploadResponse.data.status !== 'success') {
+          logger.error('Fotoğraf yükleme başarısız:', uploadResponse.data);
+          throw new Error('Fotoğraf yükleme başarısız');
         }
-        const error = new Error('Failed to upload photos');
-        logger.logAuthAction('upload_photos', 0, false, error);
-        throw error;
-      }
 
-      const data = await response.json();
-      logger.info('Profile photos uploaded successfully', { count: photos.length });
-      return data.urls;
+        // Güncel kullanıcı bilgilerini al
+        const userResponse = await api.get<ApiResponse<User>>('/users/profile');
+
+        if (userResponse.data?.data) {
+          const userData = userResponse.data.data;
+          // Profil fotoğrafı URL'lerini tam URL'ye çevir
+          if (userData.profilePhoto) {
+            userData.profilePhoto = `${BASE_URL}${userData.profilePhoto}`;
+          }
+          if (userData.profilePhotos) {
+            userData.profilePhotos = userData.profilePhotos.map(photo => `${BASE_URL}${photo}`);
+          }
+          localStorage.setItem(USER_KEY, JSON.stringify(userData));
+          const photoUrl = userData.profilePhoto;
+          if (!photoUrl) {
+            throw new Error('Profil fotoğrafı güncellenemedi');
+          }
+          return [photoUrl];
+        }
+
+        throw new Error('Kullanıcı bilgileri alınamadı');
+      } catch (error) {
+        if (error instanceof Error) {
+          logger.error('Profil fotoğrafı yükleme hatası:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+          });
+          throw new Error(`Fotoğraf yükleme başarısız: ${error.message}`);
+        }
+        throw new Error('Fotoğraf yüklenirken beklenmeyen bir hata oluştu');
+      }
     } catch (error) {
-      const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
-      logger.logAPIError('POST', '/users/profile/photos', finalError);
-      throw finalError;
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+      logger.error('Profil fotoğrafı yükleme hatası:', {
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(`Fotoğraf yükleme başarısız: ${errorMessage}`);
     }
   },
 
@@ -421,54 +302,6 @@ export const AuthService = {
     return !!localStorage.getItem(AUTH_TOKEN_KEY);
   },
 
-  getUserProfile: async (username: string): Promise<User | null> => {
-    const startTime = Date.now();
-    try {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (!token) {
-        logger.debug('No auth token found');
-        return null;
-      }
-
-      const response = await fetch(`${API_URL}/users/profile/details/${username}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      logger.logAPIRequest('GET', `/users/profile/details/${username}`, response.status, Date.now() - startTime);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          logger.warn('User not found');
-          return null;
-        }
-        if (response.status === 401) {
-          logger.warn('Session expired or invalid');
-          AuthService.logout();
-          return null;
-        }
-        throw new Error('Failed to get user profile');
-      }
-
-      const responseData = await response.json();
-      logger.debug('User profile response:', responseData);
-
-      const userData = responseData.data || responseData;
-      
-      if (!userData) {
-        throw new Error('Invalid profile response format');
-      }
-
-      logger.debug('User profile retrieved successfully', { userId: userData.id });
-      return userData;
-    } catch (error) {
-      const finalError = error instanceof Error ? error : new Error('An unexpected error occurred');
-      logger.logAPIError('GET', `/users/profile/details/${username}`, finalError);
-      return null;
-    }
-  },
-
   getUserDetails: async (userId: number) => {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
@@ -478,7 +311,7 @@ export const AuthService = {
     try {
       const storedUser = localStorage.getItem(USER_KEY);
       const user = storedUser ? JSON.parse(storedUser) : null;
-      
+
       if (!user || !user.username) {
         throw new Error('User data not found');
       }
@@ -500,4 +333,72 @@ export const AuthService = {
       throw error;
     }
   },
+
+  fetchDetailedProfile: async (): Promise<UserDetail> => {
+    try {
+      // Önce temel profil bilgilerini al
+      const profileResponse = await api.get<ApiResponse<User>>('/users/profile');
+
+      // Sonra detaylı profil bilgilerini al
+      const detailResponse = await api.get<ApiResponse<UserDetail>>('/users/profile/details');
+
+      if (profileResponse.data?.data && detailResponse.data?.data) {
+        const userData = {
+          ...profileResponse.data.data,
+          userDetail: detailResponse.data.data
+        };
+
+        // Profil fotoğrafı URL'lerini tam URL'ye çevir
+        if (userData.profilePhoto) {
+          userData.profilePhoto = `${BASE_URL}${userData.profilePhoto}`;
+        }
+        if (userData.profilePhotos) {
+          userData.profilePhotos = userData.profilePhotos.map(photo => `${BASE_URL}${photo}`);
+        }
+        if (userData.userDetail.profilePhoto) {
+          userData.userDetail.profilePhoto = `${BASE_URL}${userData.userDetail.profilePhoto}`;
+        }
+        if (userData.userDetail.profilePhotos) {
+          userData.userDetail.profilePhotos = userData.userDetail.profilePhotos.map(photo => `${BASE_URL}${photo}`);
+        }
+
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+        return userData.userDetail;
+      }
+      throw new Error('Profil detayları alınamadı');
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Profil detayları alınırken hata oluştu', { error: error.message });
+      }
+      throw error;
+    }
+  },
+
+  fetchUserProfile: async (username: string): Promise<UserDetail> => {
+    try {
+      const cleanUsername = username.replace('@', '');
+      const response = await api.get<ApiResponse<UserDetail>>(`/users/profile/details/${cleanUsername}`);
+
+      if (!response.data || !response.data.data) {
+        throw new Error('User not found');
+      }
+
+      const userData = response.data.data;
+
+      // Profil fotoğrafı URL'lerini tam URL'ye çevir
+      if (userData.profilePhoto) {
+        userData.profilePhoto = `${BASE_URL}${userData.profilePhoto}`;
+      }
+      if (userData.profilePhotos) {
+        userData.profilePhotos = userData.profilePhotos.map(photo => `${BASE_URL}${photo}`);
+      }
+
+      return userData;
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error('Error fetching user profile', { error: error.message });
+      }
+      throw error;
+    }
+  }
 }; 

@@ -4,24 +4,66 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  profilePhoto?: string;
-  isActive: boolean;
   bio?: string;
   location?: string;
-  interests: string[];
-  socialLinks: {
-    instagram: string | null;
-    twitter: string | null;
-    linkedin: string | null;
-    facebook: string | null;
-  };
-  notificationPreferences: {
-    emailNotifications: boolean;
-    pushNotifications: boolean;
-    weeklyRecommendations: boolean;
-  };
+  profilePhoto?: string;
+  profilePhotos?: string[];
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
+  interests?: string[];
+  socialLinks?: {
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    facebook?: string;
+  };
+}
+
+export interface UserDetail {
+  id: number;
+  userId: number;
+  bio: string | undefined;
+  location: string | undefined;
+  profilePhotos: string[];
+  profilePhoto: string | undefined;
+  lastLoginAt: string;
+  instagramUrl: string | undefined;
+  twitterUrl: string | undefined;
+  linkedinUrl: string | undefined;
+  facebookUrl: string | undefined;
+  interests: string[];
+  createdAt: string;
+  updatedAt: string;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface UserWithDetails extends User {
+  userDetail: {
+    id: number;
+    userId: number;
+    bio: string | undefined;
+    location: string | undefined;
+    profilePhotos: string[];
+    profilePhoto: string | undefined;
+    lastLoginAt: string;
+    instagramUrl: string | undefined;
+    twitterUrl: string | undefined;
+    linkedinUrl: string | undefined;
+    facebookUrl: string | undefined;
+    interests: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+export interface ApiResponse<T> {
+  status: string;
+  message: string;
+  data: T;
 }
 
 export interface AuthResponse {
@@ -61,9 +103,8 @@ export interface ErrorResponse {
 
 export interface AuthContextType {
   currentUser: User | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  isAuthenticated: boolean;
+  login: (user: User) => void;
   logout: () => void;
-  register: (credentials: RegisterCredentials) => Promise<void>;
-  isAuthenticated: () => boolean;
-  updateProfile: (data: ProfileUpdateData) => Promise<void>;
+  updateUser: (user: Partial<User>) => void;
 } 

@@ -7,34 +7,57 @@ interface ProfilePhotosSectionProps {
   setShowError: (error: string | null) => void;
 }
 
-export function ProfilePhotosSection({ 
-  profileImages, 
-  onImagesChange, 
-  setShowError 
+export function ProfilePhotosSection({
+  profileImages,
+  onImagesChange,
+  setShowError
 }: ProfilePhotosSectionProps) {
   const { isDark } = useTheme();
 
   const onDrop = (acceptedFiles: File[]) => {
-    if (profileImages.length >= 5) {
-      setShowError('Maximum 5 images allowed');
+    if (profileImages.length + acceptedFiles.length > 5) {
+      setShowError('En fazla 5 fotoğraf yükleyebilirsiniz');
       return;
     }
 
-    const newImages = [...profileImages];
-    acceptedFiles.forEach(file => {
-      if (newImages.length < 5) {
-        newImages.push(file);
+    // Dosya boyutu ve format kontrolü
+    const validFiles = acceptedFiles.filter(file => {
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        setShowError('Her fotoğraf en fazla 5MB boyutunda olabilir');
+        return false;
       }
+
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setShowError('Sadece JPG, PNG ve WEBP formatları desteklenmektedir');
+        return false;
+      }
+
+      return true;
     });
-    onImagesChange(newImages);
+
+    if (validFiles.length > 0) {
+      const newImages = [...profileImages];
+      validFiles.forEach(file => {
+        if (newImages.length < 5) {
+          newImages.push(file);
+        }
+      });
+      onImagesChange(newImages);
+      setShowError(null);
+    }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp']
     },
-    maxFiles: 5 - profileImages.length
+    maxFiles: 5 - profileImages.length,
+    maxSize: 5 * 1024 * 1024, // 5MB
+    multiple: true
   });
 
   const removeImage = (index: number) => {
@@ -46,7 +69,7 @@ export function ProfilePhotosSection({
       <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
         Profil Fotoğrafları
       </h2>
-      
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
         {profileImages.map((image, index) => (
           <div key={index} className="relative group">
@@ -66,7 +89,7 @@ export function ProfilePhotosSection({
             </button>
           </div>
         ))}
-        
+
         {profileImages.length < 5 && (
           <div
             {...getRootProps()}

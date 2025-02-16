@@ -175,6 +175,18 @@ export function EditProfile({ user }: EditProfileProps) {
 
     setIsLoading(true);
     try {
+      // Önce fotoğrafları yükle
+      if (profileImages.length > 0) {
+        try {
+          const photoUrls = await AuthService.uploadProfilePhotos(profileImages);
+          console.log('Yüklenen fotoğraf URLs:', photoUrls);
+        } catch (error) {
+          console.error('Fotoğraf yükleme hatası:', error);
+          setShowError('Fotoğraflar yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+          return;
+        }
+      }
+
       const [firstName, ...lastNameParts] = formData.fullName.split(' ');
       const lastName = lastNameParts.join(' ');
 
@@ -192,12 +204,14 @@ export function EditProfile({ user }: EditProfileProps) {
       await AuthService.updateProfile(updateData);
       setShowSuccess(true);
       setIsDirty(false);
-      
+
       setTimeout(() => {
         navigate('/profile');
       }, 2000);
     } catch (error) {
-      setShowError('Failed to update profile. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Profil güncellenirken bir hata oluştu';
+      setShowError(errorMessage);
+      console.error('Profil güncelleme hatası:', error);
     } finally {
       setIsLoading(false);
     }
@@ -250,9 +264,8 @@ export function EditProfile({ user }: EditProfileProps) {
             <button
               onClick={handleSaveChanges}
               disabled={isLoading}
-              className={`px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors duration-200 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
               {isLoading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
             </button>

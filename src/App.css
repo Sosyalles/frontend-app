@@ -7,15 +7,37 @@
   width: 100%;
 }
 
+/* Remove blue outline from all buttons and interactive elements */
+button,
+[role="button"],
+a,
+input,
+select,
+textarea {
+  outline: none !important;
+}
+
+button:focus,
+[role="button"]:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -24,6 +46,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -50,8 +73,10 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Smooth scroll behavior */
@@ -65,6 +90,7 @@ html {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -95,6 +121,7 @@ html {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -210,22 +237,18 @@ html {
 
 /* Checkbox styles */
 .form-checkbox {
-  @apply h-4 w-4 rounded border-gray-300 text-orange-500 
-         focus:ring-orange-500 focus:ring-offset-0
-         transition-all duration-200;
+  @apply h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 transition-all duration-200;
 }
 
 /* Link styles */
 .form-link {
-  @apply text-sm text-orange-500 hover:text-orange-600 
-         transition-colors duration-200
-         focus:outline-none focus:ring-2 focus:ring-orange-500 rounded;
+  @apply text-sm text-orange-500 hover:text-orange-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded;
 }
 
 /* Hero section background slider */
 .hero-section {
   position: relative;
-  height: 500px;
+  height: 100vh;
   overflow: hidden;
   width: 100%;
 }

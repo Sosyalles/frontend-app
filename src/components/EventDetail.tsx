@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Event } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Navbar } from './layout/Navbar';
@@ -6,7 +6,6 @@ import { AuthenticatedNavbar } from './layout/AuthenticatedNavbar';
 
 interface EventDetailProps {
   event: Event;
-  onBack: () => void;
 }
 
 const getCategoryImage = (category: string): string => {
@@ -22,70 +21,67 @@ const getCategoryImage = (category: string): string => {
   return categoryImages[category as keyof typeof categoryImages] || '/sporresim/default-event.jpg';
 };
 
-export function EventDetail({ event, onBack }: EventDetailProps) {
+export function EventDetail({ event }: EventDetailProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { currentUser, isAuthenticated, logout } = useAuth();
   const eventImage = event.image || getCategoryImage(event.category);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      {isAuthenticated && currentUser ? (
-        <AuthenticatedNavbar
-          user={currentUser}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onLogout={logout}
-        />
-      ) : (
-        <Navbar
-          onSignIn={() => {}}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      )}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white">
+        {isAuthenticated && currentUser ? (
+          <AuthenticatedNavbar
+            user={currentUser}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onLogout={logout}
+          />
+        ) : (
+          <Navbar
+            onSignIn={() => { }}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        )}
+      </div>
 
       {/* Hero Banner */}
-      <div className="relative h-[400px] w-full mt-16">
+      <div className="relative h-[400px] w-full">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-purple-900/80"></div>
         <img
           src={event.bannerImage || '/images/categories/default-banner.jpg'}
           alt={event.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center space-x-4 mb-4">
-              <button 
-                onClick={onBack}
-                className="flex items-center text-white hover:text-orange-200 transition-colors"
-              >
-                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span>Back to Events</span>
-              </button>
-            </div>
-            <h1 className="text-4xl font-bold mb-4 text-white">{event.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-white">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{event.date}</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{event.location}</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span>{event.attendees} Attendees</span>
+        <div className="absolute inset-0 flex items-end pb-26">
+          <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <h1 className="text-5xl font-bold mb-6 text-white">{event.title}</h1>
+              <div className="flex items-center gap-6 text-base text-white/90">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{event.date}</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{event.location}</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>{event.attendees} Katılımcı</span>
+                </div>
               </div>
             </div>
           </div>
@@ -152,12 +148,6 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                     Get Directions
                   </button>
                 </div>
-                {event.price && (
-                  <div>
-                    <h3 className="font-medium mb-2">Price</h3>
-                    <p className="text-sm text-gray-600">${event.price}</p>
-                  </div>
-                )}
               </div>
             </div>
 
