@@ -14,7 +14,6 @@ api.interceptors.request.use(
         const token = localStorage.getItem('auth_token');
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
-            config.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'; // Frontend URL'niz
         }
         return config;
     },
