@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ErrorResponse } from '../types/auth';
+import { ErrorResponse } from '../types/responses/api-responses.dto';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
