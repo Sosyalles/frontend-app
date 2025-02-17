@@ -1,18 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User } from '../../types/auth';
-import { AuthService } from '../../services/auth.service';
+import { UserResponseDTO } from '../../types/dtos/user.dto';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface AuthenticatedNavbarProps {
-  user: User | null;
+  user: UserResponseDTO | null;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onLogout: () => void;
+  profilePhoto?: string;
 }
 
-export function AuthenticatedNavbar({ user, searchQuery, onSearchChange, onLogout }: AuthenticatedNavbarProps) {
-  const { isDark } = useTheme();
+export function AuthenticatedNavbar({ user, searchQuery, onSearchChange, onLogout, profilePhoto }: AuthenticatedNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -165,13 +164,13 @@ export function AuthenticatedNavbar({ user, searchQuery, onSearchChange, onLogou
               >
                 <div className="relative">
                   <img
-                    src={user.profilePhoto || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                    alt={`${user.firstName} ${user.lastName}`}
+                    src={profilePhoto || user?.profilePhoto || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                    alt={`${user?.firstName} ${user?.lastName}`}
                     className="w-10 h-10 rounded-full border-2 border-transparent group-hover:border-orange-500 dark:group-hover:border-orange-400 transition-all duration-200"
                   />
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 dark:bg-green-400 border-2 border-white dark:border-gray-900 rounded-full"></div>
                 </div>
-                <span className="text-gray-700 dark:text-gray-200 font-medium">{`${user.firstName} ${user.lastName}`}</span>
+                <span className="text-gray-700 dark:text-gray-200 font-medium">{`${user?.firstName} ${user?.lastName}`}</span>
                 <svg
                   className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
@@ -263,13 +262,13 @@ export function AuthenticatedNavbar({ user, searchQuery, onSearchChange, onLogou
 
             <div className="flex items-center space-x-3 px-2">
               <img
-                src={user.profilePhoto || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                alt={`${user.firstName} ${user.lastName}`}
+                src={profilePhoto || user?.profilePhoto || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                alt={`${user?.firstName} ${user?.lastName}`}
                 className="w-10 h-10 rounded-full border-2 border-transparent"
               />
               <div>
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {`${user.firstName} ${user.lastName}`}
+                  {`${user?.firstName} ${user?.lastName}`}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
               </div>
