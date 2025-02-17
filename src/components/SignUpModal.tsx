@@ -1,28 +1,36 @@
-import { useState } from 'react';
-import { User, ErrorResponse } from '../types/auth';
-import { AuthService } from '../services/auth.service';
+import React, { useState, useEffect } from 'react';
+import { CreateUserDTO } from '../types/dtos/user.dto';
+import { UserResponseDTO } from '../types/dtos/user.dto';
+import { ErrorResponse } from '../types/responses/api-responses.dto';
+import { authService } from '../services';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { getErrorMessage } from '../lib/errorHandler';
 
 interface SignUpModalProps {
   isOpen: boolean;
   onClose: () => void;
   onBackToSignIn: () => void;
-  onSuccess: (user: User) => void;
+  onSuccess: (user: UserResponseDTO) => void;
 }
 
 export function SignUpModal({ isOpen, onClose, onBackToSignIn, onSuccess }: SignUpModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateUserDTO>({
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    username: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [showError, setShowError] = useState<string>('');
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,38 +40,61 @@ export function SignUpModal({ isOpen, onClose, onBackToSignIn, onSuccess }: Sign
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setShowSuccess(false);
+    setIsLoading(true);
+    setError(null);
 
+    // Basic validation
+    const validationErrors: string[] = [];
+    
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
+      validationErrors.push('Şifreler eşleşmiyor');
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      validationErrors.push('Şifre en az 8 karakter olmalıdır');
+    }
+
+    if (!formData.username || formData.username.length < 3) {
+      validationErrors.push('Kullanıcı adı en az 3 karakter olmalı');
+    }
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(', '));
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      const { confirmPassword, ...registerData } = formData;
-      await AuthService.register(registerData);
+      // Prepare signup data, keeping all original fields
+      const signupData: CreateUserDTO = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+      };
+
+      await signUp(signupData);
+      
       setShowSuccess(true);
+      
+      // Removed onSuccess call to prevent premature authentication
+      // if (onSuccess) {
+      //   onSuccess({...});
+      // }
+
+      // Use a shorter timeout and close the modal
       setTimeout(() => {
-        onClose();
-        onBackToSignIn();
+        onClose(); // Close the modal
+        onBackToSignIn(); // Go back to sign-in modal
       }, 2000);
-    } catch (err) {
-      const error = err as Error | ErrorResponse;
-      if ('code' in error) {
-        setError(error.message);
-      } else {
-        setError(error.message || 'An error occurred during registration');
-      }
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +136,7 @@ export function SignUpModal({ isOpen, onClose, onBackToSignIn, onSuccess }: Sign
           </div>
         )}
         
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSignUp}>
           <div className="grid grid-cols-2 gap-4">
             <div className="form-group">
               <label htmlFor="firstName" className="form-label">
