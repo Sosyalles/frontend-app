@@ -1,42 +1,65 @@
-import { useState } from 'react';
-import { User, ErrorResponse } from '../types/auth';
-import { AuthService } from '../services/auth.service';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LoginRequestDTO, UserResponseDTO } from '../types/dtos/user.dto';
+import { ApiResponseUserDTO, ErrorResponse } from '../types/responses/api-responses.dto';
+import { authService } from '../services';
+import { LoginResponseDTO } from '../types/responses/api-responses.dto';
+import { useAuth } from '../contexts/AuthContext';
+import { getErrorMessage } from '../lib/errorHandler';
 
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onForgotPassword: () => void;
   onSignUp: () => void;
-  onSuccess: (user: User) => void;
+  onSuccess: (user: UserResponseDTO) => void;
 }
 
 export function SignInModal({ isOpen, onClose, onForgotPassword, onSignUp, onSuccess }: SignInModalProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
-      const response = await AuthService.login(email, password);
-      if (response.data) {
-        onSuccess(response.data.user);
-      }
+      const user = await signIn(email, password);
+      
+      // Set success message
+      setSuccessMessage('Giriş başarılı! Yönlendiriliyorsunuz...');
+      
+      // Delay to show success message and then close modal
+      const timer = setTimeout(() => {
+        onClose(); // Close the modal first
+        navigate('/'); // Then navigate
+      }, 1500);
+
+      // Cleanup function to clear the timer if component unmounts
+      return () => clearTimeout(timer);
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || 'Giriş yapılırken bir hata oluştu');
-      } else {
-        setError('Beklenmeyen bir hata oluştu');
-      }
-    } finally {
+      const errorMessage = getErrorMessage(error);
+      setError(errorMessage);
+      setSuccessMessage(null);
       setIsLoading(false);
+      
+      // Prevent navigation on error
+      return;
     }
+  };
+
+  // Prevent modal from closing when clicking on success message
+  const handleSuccessMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   if (!isOpen) return null;
@@ -174,6 +197,16 @@ export function SignInModal({ isOpen, onClose, onForgotPassword, onSignUp, onSuc
                          transition-transform duration-300 origin-left"></div>
           </button>
         </div>
+
+        {/* Success Message - Positioned inside modal-content */}
+        {successMessage && (
+          <div 
+            className="absolute top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce"
+            onClick={handleSuccessMessageClick}
+          >
+            {successMessage}
+          </div>
+        )}
       </div>
     </div>
   );
