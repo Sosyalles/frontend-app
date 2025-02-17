@@ -1,7 +1,7 @@
-import { User } from '../../types/auth';
+import { UserResponseDTO } from '../../types/dtos/user.dto';
 
 interface ProfileHeaderProps {
-    user: User;
+    user: UserResponseDTO;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
