@@ -1,6 +1,5 @@
-import { Event } from '../types/Event';
 
-export const events: Event[] = [
+export const events: any = [
   {
     id: 1,
     title: "Tech Summit 2025",
