@@ -1,9 +1,9 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
-    "title": "User Service API",
+    "title": "User Management Service API",
+    "description": "A comprehensive User Management Service with JWT Authentication and Internal Service Communication",
     "version": "1.0.0",
-    "description": "User Service API for authentication, profile management, and user operations",
     "contact": {
       "name": "API Support",
       "email": "support@example.com"
@@ -12,248 +12,39 @@
   "servers": [
     {
       "url": "http://localhost:3000/api",
-      "description": "Development server"
+      "description": "Local development server"
     }
   ],
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "JWT token containing userId and username for user authentication. Format: Bearer <token>"
-      },
-      "apiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-KEY",
-        "description": "API key for internal service communication"
-      }
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User registration, login, and authentication operations"
     },
-    "schemas": {
-      "User": {
-        "type": "object",
-        "required": ["email", "username", "firstName", "lastName"],
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "readOnly": true,
-            "description": "Unique identifier for the user"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "description": "User's email address"
-          },
-          "username": {
-            "type": "string",
-            "minLength": 3,
-            "maxLength": 30,
-            "description": "User's unique username"
-          },
-          "firstName": {
-            "type": "string",
-            "description": "User's first name"
-          },
-          "lastName": {
-            "type": "string",
-            "description": "User's last name"
-          },
-          "profilePhoto": {
-            "type": "string",
-            "nullable": true,
-            "description": "URL to user's profile photo"
-          },
-          "isActive": {
-            "type": "boolean",
-            "default": true,
-            "description": "Whether the user account is active"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          }
-        }
-      },
-      "Error": {
-        "type": "object",
-        "required": ["code", "message"],
-        "properties": {
-          "code": {
-            "type": "integer",
-            "description": "HTTP status code"
-          },
-          "message": {
-            "type": "string",
-            "description": "Error message"
-          },
-          "details": {
-            "type": "object",
-            "description": "Additional error details",
-            "nullable": true
-          }
-        }
-      },
-      "HealthCheck": {
-        "type": "object",
-        "required": ["status", "timestamp", "services"],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["ok", "error"],
-            "description": "Overall health status"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Time of health check"
-          },
-          "services": {
-            "type": "object",
-            "properties": {
-              "database": {
-                "type": "string",
-                "enum": ["ok", "error"],
-                "description": "Database connection status"
-              }
-            }
-          }
-        }
-      },
-      "UserDetail": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "readOnly": true,
-            "description": "Unique identifier for the user detail"
-          },
-          "userId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Reference to User ID"
-          },
-          "bio": {
-            "type": "string",
-            "maxLength": 500,
-            "nullable": true,
-            "description": "User's biography"
-          },
-          "location": {
-            "type": "string",
-            "maxLength": 100,
-            "nullable": true,
-            "description": "User's location"
-          },
-          "socialMedia": {
-            "type": "object",
-            "properties": {
-              "instagramUsername": {
-                "type": "string",
-                "nullable": true,
-                "description": "Instagram username"
-              },
-              "twitterUsername": {
-                "type": "string",
-                "nullable": true,
-                "description": "Twitter username"
-              },
-              "linkedInProfile": {
-                "type": "string",
-                "nullable": true,
-                "description": "LinkedIn profile URL"
-              },
-              "facebookProfile": {
-                "type": "string",
-                "nullable": true,
-                "description": "Facebook profile URL"
-              }
-            }
-          },
-          "interests": {
-            "type": "object",
-            "properties": {
-              "sports": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "List of sports interests"
-              },
-              "music": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "List of music interests"
-              },
-              "technology": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "List of technology interests"
-              }
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          }
-        }
-      }
+    {
+      "name": "Profile",
+      "description": "User profile management operations"
+    },
+    {
+      "name": "User Details",
+      "description": "User additional details management"
+    },
+    {
+      "name": "Internal",
+      "description": "Internal service communication endpoints"
     }
-  },
+  ],
   "paths": {
     "/auth/register": {
       "post": {
         "tags": ["Authentication"],
         "summary": "Register a new user",
-        "description": "Create a new user account with the provided information",
-        "operationId": "registerUser",
+        "description": "Create a new user account with provided details",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["email", "password", "username", "firstName", "lastName"],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "minLength": 8
-                  },
-                  "username": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 30
-                  },
-                  "firstName": {
-                    "type": "string"
-                  },
-                  "lastName": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/CreateUserDTO"
               }
             }
           }
@@ -264,37 +55,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input or validation error",
+            "description": "Validation error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Email or username already exists",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -305,26 +76,14 @@
     "/auth/login": {
       "post": {
         "tags": ["Authentication"],
-        "summary": "Login user",
-        "description": "Authenticate user and return JWT token",
-        "operationId": "loginUser",
+        "summary": "User login",
+        "description": "Authenticate user and generate JWT token",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["email", "password"],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                }
+                "$ref": "#/components/schemas/LoginRequestDTO"
               }
             }
           }
@@ -335,30 +94,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": ["token", "user"],
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Login successful"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "token": {
-                          "type": "string",
-                          "description": "JWT token containing userId and username"
-                        },
-                        "user": {
-                          "$ref": "#/components/schemas/User"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/LoginResponseDTO"
                 }
               }
             }
@@ -368,17 +104,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many login attempts",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -386,92 +112,19 @@
         }
       }
     },
-    "/auth/change-password": {
-      "post": {
-        "tags": ["Authentication"],
-        "summary": "Change user password",
-        "description": "Change authenticated user's password",
-        "operationId": "changePassword",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["oldPassword", "newPassword"],
-                "properties": {
-                  "oldPassword": {
-                    "type": "string",
-                    "format": "password"
-                  },
-                  "newPassword": {
-                    "type": "string",
-                    "format": "password",
-                    "minLength": 8
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Password changed successfully"
-          },
-          "401": {
-            "description": "Invalid credentials or unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/profile": {
+    "/profile": {
       "get": {
         "tags": ["Profile"],
-        "summary": "Get user profile",
-        "description": "Get authenticated user's basic profile information",
-        "security": [{ "bearerAuth": [] }],
+        "summary": "Get current user profile",
+        "description": "Retrieve the profile of the authenticated user",
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
             "description": "Profile retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Profile retrieved successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
                 }
               }
             }
@@ -481,50 +134,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           }
         }
       },
-      "patch": {
+      "put": {
         "tags": ["Profile"],
         "summary": "Update user profile",
-        "description": "Update authenticated user's profile information using JWT token for authentication",
-        "operationId": "updateProfile",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "description": "Update the profile of the authenticated user",
+        "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "firstName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 50
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 50
-                  },
-                  "username": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 30
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  }
-                }
+                "$ref": "#/components/schemas/UpdateUserDTO"
               }
             }
           }
@@ -535,40 +162,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "User updated successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input or validation error",
+            "description": "Validation error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid or missing token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -576,17 +180,80 @@
         }
       }
     },
-    "/users/profile/photos": {
+    "/profile/detail": {
+      "get": {
+        "tags": ["User Details"],
+        "summary": "Get user details",
+        "description": "Retrieve additional details for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "User details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDetailDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["User Details"],
+        "summary": "Update user details",
+        "description": "Update additional details for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User details updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDetailDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/photos": {
       "post": {
         "tags": ["Profile"],
         "summary": "Upload profile photos",
         "description": "Upload one or more profile photos for the authenticated user",
-        "operationId": "uploadProfilePhotos",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -601,7 +268,7 @@
                       "format": "binary"
                     },
                     "maxItems": 5,
-                    "description": "Profile photos to upload (max 5)"
+                    "description": "Array of image files (max 5, 2MB each, JPEG/PNG only)"
                   }
                 }
               }
@@ -614,16 +281,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "urls": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "URLs of uploaded photos"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ProfilePhotosUploadResponse"
                 }
               }
             }
@@ -649,212 +307,12 @@
             }
           }
         }
-      }
-    },
-    "/users/profile/details": {
-      "get": {
+      },
+      "delete": {
         "tags": ["Profile"],
-        "summary": "Get user profile with details",
-        "description": "Get authenticated user's complete profile information including user details",
+        "summary": "Delete profile photos",
+        "description": "Delete specific profile photos for the authenticated user",
         "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Profile with details retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "User profile with details retrieved successfully"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer"
-                        },
-                        "username": {
-                          "type": "string"
-                        },
-                        "email": {
-                          "type": "string"
-                        },
-                        "firstName": {
-                          "type": "string"
-                        },
-                        "lastName": {
-                          "type": "string"
-                        },
-                        "isActive": {
-                          "type": "boolean"
-                        },
-                        "profilePhotos": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "userDetail": {
-                          "$ref": "#/components/schemas/UserDetail"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/profile/details/{username}": {
-      "get": {
-        "tags": ["Profile"],
-        "summary": "Get user profile with details by username",
-        "description": "Get complete profile information including user details for any user by their username",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "username",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Username of the user whose profile to retrieve"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Profile with details retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "User profile with details retrieved successfully"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer"
-                        },
-                        "username": {
-                          "type": "string"
-                        },
-                        "email": {
-                          "type": "string"
-                        },
-                        "firstName": {
-                          "type": "string"
-                        },
-                        "lastName": {
-                          "type": "string"
-                        },
-                        "isActive": {
-                          "type": "boolean"
-                        },
-                        "profilePhotos": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "userDetail": {
-                          "$ref": "#/components/schemas/UserDetail"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/profile/{userId}": {
-      "patch": {
-        "tags": ["Profile"],
-        "summary": "Update user profile",
-        "description": "Update authenticated user's profile information. User can only update their own profile.",
-        "operationId": "updateProfile",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "userId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "ID of the user whose profile to update (must match authenticated user's ID)"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -862,33 +320,23 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "firstName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 50
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 50
-                  },
-                  "username": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 30
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email"
+                  "photoUrls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "description": "Array of photo URLs to delete"
                   }
-                }
+                },
+                "required": ["photoUrls"]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Profile updated successfully",
+            "description": "Photos deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -900,10 +348,19 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "User updated successfully"
+                      "example": "Profile photos deleted successfully"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/User"
+                      "type": "object",
+                      "properties": {
+                        "deletedPhotos": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -911,7 +368,7 @@
             }
           },
           "400": {
-            "description": "Invalid input or validation error",
+            "description": "Invalid photo URLs or validation error",
             "content": {
               "application/json": {
                 "schema": {
@@ -921,7 +378,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid or missing token",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -929,23 +386,120 @@
                 }
               }
             }
-          },
-          "403": {
-            "description": "Forbidden - Cannot update another user's profile",
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Change user password",
+        "description": "Change the password for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
           },
-          "404": {
-            "description": "User not found",
+          "400": {
+            "description": "Validation error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get all users",
+        "description": "Retrieve a paginated list of users",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UserResponseDTO"
+                          }
+                        },
+                        "total": {"type": "integer"},
+                        "page": {"type": "integer"},
+                        "limit": {"type": "integer"},
+                        "totalPages": {"type": "integer"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -956,52 +510,36 @@
     "/internal/users/{id}": {
       "get": {
         "tags": ["Internal"],
-        "summary": "Get user by ID",
-        "description": "Get user details by ID (Internal API)",
-        "operationId": "getUserById",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "summary": "Get user by ID (Internal Service)",
+        "description": "Retrieve a user by their ID for internal service communication",
+        "security": [{"apiKeyAuth": []}],
         "parameters": [
           {
-            "in": "path",
             "name": "id",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "integer"
-            },
-            "description": "User ID"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "User found",
+            "description": "User retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
                 }
               }
             }
           },
-          "401": {
-            "description": "Invalid or missing API key",
+          "403": {
+            "description": "Forbidden - Invalid API Key",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1012,143 +550,240 @@
     "/internal/users/username/{username}": {
       "get": {
         "tags": ["Internal"],
-        "summary": "Get user by username",
-        "description": "Get user details by username (Internal API)",
-        "operationId": "getUserByUsername",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "summary": "Get user by username (Internal Service)",
+        "description": "Retrieve a user by their username for internal service communication",
+        "security": [{"apiKeyAuth": []}],
         "parameters": [
           {
-            "in": "path",
             "name": "username",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
-            },
-            "description": "Username"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "User found",
+            "description": "User retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
                 }
               }
             }
           },
-          "401": {
-            "description": "Invalid or missing API key",
+          "403": {
+            "description": "Forbidden - Invalid API Key",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           }
         }
       }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
     },
-    "/internal/users/email/{email}": {
-      "get": {
-        "tags": ["Internal"],
-        "summary": "Get user by email",
-        "description": "Get user details by email (Internal API)",
-        "operationId": "getUserByEmail",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "email",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "email"
-            },
-            "description": "User email"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
+    "schemas": {
+      "CreateUserDTO": {
+        "type": "object",
+        "required": ["username", "email", "password", "firstName", "lastName"],
+        "properties": {
+          "username": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string", "minLength": 8},
+          "firstName": {"type": "string"},
+          "lastName": {"type": "string"}
+        }
+      },
+      "UpdateUserDTO": {
+        "type": "object",
+        "properties": {
+          "username": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string", "minLength": 8},
+          "firstName": {"type": "string"},
+          "lastName": {"type": "string"},
+          "isActive": {"type": "boolean"},
+          "profilePhoto": {"type": "string"}
+        }
+      },
+      "UserResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "username": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "firstName": {"type": "string"},
+          "lastName": {"type": "string"},
+          "isActive": {"type": "boolean"},
+          "lastLoginAt": {"type": "string", "format": "date-time"},
+          "createdAt": {"type": "string", "format": "date-time"},
+          "updatedAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "LoginRequestDTO": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string"}
+        }
+      },
+      "LoginResponseDTO": {
+        "type": "object",
+        "properties": {
+          "token": {"type": "string"},
+          "user": {"$ref": "#/components/schemas/UserResponseDTO"}
+        }
+      },
+      "ChangePasswordDTO": {
+        "type": "object",
+        "required": ["currentPassword", "newPassword"],
+        "properties": {
+          "currentPassword": {"type": "string"},
+          "newPassword": {"type": "string", "minLength": 8}
+        }
+      },
+      "NotificationPreferencesDTO": {
+        "type": "object",
+        "properties": {
+          "emailNotifications": {"type": "boolean"},
+          "pushNotifications": {"type": "boolean"},
+          "weeklyRecommendations": {"type": "boolean"}
+        }
+      },
+      "UpdateUserDetailDTO": {
+        "type": "object",
+        "properties": {
+          "bio": {"type": "string"},
+          "location": {"type": "string"},
+          "profilePhoto": {"type": "string"},
+          "profilePhotos": {
+            "type": "array",
+            "items": {"type": "string"}
           },
-          "401": {
-            "description": "Invalid or missing API key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "interests": {
+            "type": "array",
+            "items": {"type": "string"}
           },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
+          "notificationPreferences": {
+            "$ref": "#/components/schemas/NotificationPreferencesDTO"
+          }
+        }
+      },
+      "UserDetailResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "userId": {"type": "integer"},
+          "bio": {"type": "string"},
+          "location": {"type": "string"},
+          "profilePhoto": {"type": "string"},
+          "profilePhotos": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "interests": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "notificationPreferences": {
+            "$ref": "#/components/schemas/NotificationPreferencesDTO"
+          },
+          "lastLoginAt": {"type": "string", "format": "date-time"},
+          "createdAt": {"type": "string", "format": "date-time"},
+          "updatedAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"}
+        }
+      },
+      "ApiResponseUserDTO": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {"$ref": "#/components/schemas/UserResponseDTO"}
+        }
+      },
+      "ApiResponseUserDetailDTO": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {"$ref": "#/components/schemas/UserDetailResponseDTO"}
+        }
+      },
+      "ApiResponseProfilePhotos": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "profilePhoto": {"type": "string"}
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "example": "error"},
+          "message": {"type": "string"},
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {"type": "string"},
+                "message": {"type": "string"}
               }
             }
           }
         }
-      }
-    },
-    "/health": {
-      "get": {
-        "tags": ["Health"],
-        "summary": "Check service health",
-        "description": "Check the health status of the service and its dependencies",
-        "operationId": "checkHealth",
-        "responses": {
-          "200": {
-            "description": "Service is healthy",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthCheck"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service is unhealthy",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthCheck"
-                }
-              }
+      },
+      "ProfilePhotosUploadResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "profilePhoto": {"type": "string"}
             }
           }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "example": "error"},
+          "message": {"type": "string"}
         }
       }
     }
