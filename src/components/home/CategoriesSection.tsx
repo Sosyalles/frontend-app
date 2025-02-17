@@ -1,4 +1,4 @@
-import { Category } from '../../types';
+import { Category } from '../../types/dtos/category.dto';
 
 interface CategoriesSectionProps {
   categories: Category[];
