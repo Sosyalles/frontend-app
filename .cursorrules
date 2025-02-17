@@ -1,48 +1,74 @@
-### **Objective**  
-Tasarımları yaparken güncel UI/UX kütüphanelerini kullan ve modern tasarımlar yap.
-Build a **fast, lightweight, and maintainable** React frontend for a social networking platform using **TypeScript**. The focus is on **performance, security, and modularity**, following **SOLID principles** while keeping dependencies minimal.  
+### **🎯 Ana Hedef**
+**Hızlı, hafif ve sürdürülebilir** bir sosyal ağ platformu frontendi oluştur. **TypeScript** ile güçlü tip güvenliği sağla, **SOLID prensipleri** ile ölçeklenebilir bir yapı kur.
+TypeScript tanımlamalarına dikkat et. Çok fazla bu konuda hata yapıyorsun.
+
+Cevap verirken uzun uzun yazılar yazmanı istemiyorum sadece kodları yaz.
+# Hata Çözümü
+
+- Kullanıcının geçmiş hatalarını ve çözümlerini saklamak için knowledge-base.md dosyasını kullan.
+- Bir hata tespit edildiğinde önce knowledge-base.md dosyasını kontrol et.
+- Eğer hata için bir kayıt varsa, doğrudan önerilen çözümü kullan.
+- Eğer hata yeni bir hata ise, knowledge-base.md dosyasına yeni bir kayıt ekleyin.
+
+## [Hata Mesajı]
+Çözüm:
+
+## [Hata Mesajı]
+Çözüm: [Çözüm Açıklaması]
+
+- Kullanıcı aynı hatayı tekrar sorarsa, önce bu dosyayı kontrol et ve eğer çözüm varsa doğrudan yanıt ver.
+- Eğer dosyada kayıtlı değilse, en iyi çözümü üret ve yeni bir kayıt oluştur.
+
+---
+### genel bağlama odaklan tüm dosyaları okuyup kodlarını yaz.
+### **1️⃣ Temel Kurulum**
+- **React + TypeScript** → Tip güvenliği ve modern React özellikleri
+- **Minimal Bağımlılık** → Sadece gerekli kütüphaneler (Swiper, Axios, etc.)
+- **Modüler Yapı** → Kolay genişletilebilir klasör organizasyonu
 
 ---
 
-### **1. Core Setup**  
-- **React + TypeScript** for strong typing.  
-- **Minimal dependencies** (avoid unnecessary third-party libraries).  
-- **Efficient project structure** for easy scalability.  
+### **2️⃣ Performans & Optimizasyon**
+- **Lazy Loading** → Bileşenler/routelar için dinamik import
+- **Memoization** → `React.memo`, `useMemo`, `useCallback` ile gereksiz render önleme
+- **API Optimizasyon** → Debounce + Otomatik cache (SWR/React Query)
+- **Resim Optimizasyonu** → WebP format + Lazy load
 
 ---
 
-### **2. Performance & Optimization**  
-- **Lazy-loading** for components & images.  
-- **Memoization** (`React.memo`, `useMemo`, `useCallback`) to prevent re-renders.  
-- **Code-splitting** via React Suspense & dynamic imports.  
-- **Optimized API requests** (batching, caching, and debouncing).  
+### **3️⃣ State & API Yönetimi**
+- **Context API** → Lightweight state yönetimi (Auth, UI Teması)
+- **Axios Instance** → Interceptor'larla merkezi hata yönetimi
+- **API Caching** → 1 dakikalık otomatik önbellekleme
 
 ---
 
-### **3. State & API Management**  
-- **Context API** for lightweight state management.  
-- **Axios or Fetch** with request/response interceptors.  
-- **Centralized error handling** for API failures.  
+### **4️⃣ UI/UX & Tasarım**
+- **Tailwind CSS** → Utility-first styling + Dark mode desteği
+- **Mobil Öncelikli** → Dikey akış + Hamburger menü
+- **Etkileşimler** → Çift tıklama beğeni + Smooth animasyonlar
+- **Erişilebilirlik** → WAI-ARIA standartları + Klavye navigasyonu
 
 ---
 
-### **4. UI & Styling**  
-- **Tailwind CSS** for clean, efficient styling.  
-- **Dark mode support**.  
-- **Mobile-first design** with a responsive layout.  
+### **5️⃣ Güvenlik & Doğrulama**
+- **JWT Auth** → HttpOnly cookie ile token saklama
+- **Input Sanitizasyon** → XSS/Injection koruması
+- **Yetki Kontrol** → Route guard'lar ile yetkisiz erişim engelleme
 
 ---
 
-### **5. Security**  
-- **JWT-based authentication** (tokens stored in HttpOnly cookies).  
-- **Input sanitization** to prevent XSS attacks.  
-
-### **7. Expected Output**  
-- A **fast, modular, and scalable** frontend.  
-- **Minimal dependencies** and **optimized performance**.  
-- **Clean, maintainable code** with strong typing.  
-- **Secure and responsive UI** with seamless user experience.  
+### **6️⃣ Temel Özellikler**
+- 📍 Etkinlik keşif (Konum bazlı filtreleme)
+- 📸 Profil fotoğrafı galerisi (Swiper ile)
+- 🔔 Gerçek zamanlı bildirimler (WebSocket)
+- ✉️ Mesajlaşma (Eşleşme sonrası aktif)
 
 ---
 
-Generate a frontend with these principles, ensuring **simplicity, speed, and efficiency**.  
+### **🚀 Beklenen Çıktı**
+- **0.5s Altı** → Lighthouse performans skoru
+- **<%100kb** → İlk yükleme boyutu (gzip)
+- **SEO Dostu** → SSR/SSG desteği
+- **PWA** → Offline çalışma + Bildirim
+- **Clean Code** → ESLint + Prettier + TypeScript strict mode
