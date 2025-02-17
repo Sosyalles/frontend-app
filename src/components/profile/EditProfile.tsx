@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { User } from '../../types/auth';
-import { AuthService } from '../../services/auth.service';
+import { UserResponseDTO, UpdateUserDTO } from '../../types/dtos/user.dto';
+import { userProfileService } from '../../services';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { getErrorMessage } from '../../lib/errorHandler';
 
 // Import modular components
 import { ProfilePhotosSection } from './edit-profile/ProfilePhotosSection';
 import { PersonalInfoSection } from './edit-profile/PersonalInfoSection';
 import { InterestsSection } from './edit-profile/InterestsSection';
-import { SocialMediaSection } from './edit-profile/SocialMediaSection';
 import { NotificationPreferencesSection } from './edit-profile/NotificationPreferencesSection';
 
 interface EditProfileProps {
-  user: User;
+  user: UserResponseDTO;
 }
 
 
@@ -23,12 +23,6 @@ interface EditProfileFormData {
   bio: string;
   location: string;
   interests: string[];
-  socialLinks: {
-    instagram: string | null;
-    twitter: string | null;
-    linkedin: string | null;
-    facebook: string | null;
-  };
   notificationPreferences: {
     emailNotifications: boolean;
     pushNotifications: boolean;
@@ -37,7 +31,7 @@ interface EditProfileFormData {
 }
 
 export function EditProfile({ user }: EditProfileProps) {
-  const { logout, currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
@@ -52,58 +46,78 @@ export function EditProfile({ user }: EditProfileProps) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<EditProfileFormData>({
-    fullName: `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`,
-    email: currentUser?.email || '',
-    bio: currentUser?.bio || '',
-    location: currentUser?.location || '',
-    interests: currentUser?.interests || [],
-    socialLinks: {
-      instagram: currentUser?.socialLinks?.instagram || null,
-      twitter: currentUser?.socialLinks?.twitter || null,
-      linkedin: currentUser?.socialLinks?.linkedin || null,
-      facebook: currentUser?.socialLinks?.facebook || null
-    },
+    fullName: '',
+    email: '',
+    bio: '',
+    location: '',
+    interests: [],
     notificationPreferences: {
-      emailNotifications: currentUser?.notificationPreferences?.emailNotifications ?? true,
-      pushNotifications: currentUser?.notificationPreferences?.pushNotifications ?? true,
-      weeklyRecommendations: currentUser?.notificationPreferences?.weeklyRecommendations ?? false
+      emailNotifications: true,
+      pushNotifications: true,
+      weeklyRecommendations: false
     }
   });
+
+  // Add a new state for profile photo URLs
+  const [profilePhotoUrls, setProfilePhotoUrls] = useState<string[]>([]);
+
+  const [initialFormState, setInitialFormState] = useState<EditProfileFormData>({
+    fullName: '',
+    email: '',
+    bio: '',
+    location: '',
+    interests: [],
+    notificationPreferences: {
+      emailNotifications: true,
+      pushNotifications: true,
+      weeklyRecommendations: false
+    }
+  });
+
+  const [initialProfilePhotos, setInitialProfilePhotos] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
       setIsLoading(true);
       try {
-        const userDetails = await AuthService.getUserDetails(user.id);
-        setFormData(prev => ({
-          ...prev,
-          fullName: `${userDetails.firstName} ${userDetails.lastName}`,
+        const response = await userProfileService.getUserDetails(user.username);
+        const userDetails = response.data;
+        
+        const fetchedFormData = {
+          fullName: `${userDetails.firstName} ${userDetails.lastName}`.trim(),
           email: userDetails.email,
-          location: userDetails.userDetail?.location || '',
           bio: userDetails.userDetail?.bio || '',
+          location: userDetails.userDetail?.location || '',
           interests: userDetails.userDetail?.interests || [],
-          socialLinks: {
-            instagram: userDetails.userDetail?.instagram || null,
-            twitter: userDetails.userDetail?.twitter || null,
-            linkedin: userDetails.userDetail?.linkedin || null,
-            facebook: userDetails.userDetail?.facebook || null
-          },
           notificationPreferences: {
             emailNotifications: true,
             pushNotifications: true,
             weeklyRecommendations: false
           }
-        }));
+        };
+
+        // Set both current form data and initial state
+        setFormData(fetchedFormData);
+        setInitialFormState(fetchedFormData);
+
+        // Set profile photos
+        const profilePhotos = userDetails.userDetail?.profilePhotos || [];
+        setProfilePhotoUrls(profilePhotos);
+        setInitialProfilePhotos(profilePhotos);
+
       } catch (error) {
-        setShowError('Kullanıcı detayları yüklenirken bir hata oluştu.');
+        const errorMessage = getErrorMessage(error);
+        setShowError(errorMessage);
         console.error('Error fetching user details:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserDetails();
-  }, [user.id]);
+    if (user?.username) {
+      fetchUserDetails();
+    }
+  }, [user.username]);
 
   // Form validation
   const validateForm = () => {
@@ -121,18 +135,6 @@ export function EditProfile({ user }: EditProfileProps) {
       ...prev,
       [name]: value
     }));
-    setIsDirty(true);
-  };
-
-  const handleSocialLinkChange = (name: string, value: string | null) => {
-    setFormData(prev => ({
-      ...prev,
-      socialLinks: {
-        ...prev.socialLinks,
-        [name]: value
-      }
-    }));
-    setIsDirty(true);
   };
 
   const handleNotificationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,7 +146,6 @@ export function EditProfile({ user }: EditProfileProps) {
         [name]: checked
       }
     }));
-    setIsDirty(true);
   };
 
   const handleAddInterest = (interest: string) => {
@@ -154,7 +155,6 @@ export function EditProfile({ user }: EditProfileProps) {
         interests: [...prev.interests, interest.trim()]
       }));
       setNewInterest('');
-      setIsDirty(true);
     }
   };
 
@@ -163,7 +163,6 @@ export function EditProfile({ user }: EditProfileProps) {
       ...prev,
       interests: prev.interests.filter((_, i) => i !== index)
     }));
-    setIsDirty(true);
   };
 
   const handleSaveChanges = async () => {
@@ -175,33 +174,52 @@ export function EditProfile({ user }: EditProfileProps) {
 
     setIsLoading(true);
     try {
-      // Önce fotoğrafları yükle
+      // Handle profile photos upload
+      let photoUrls: string[] = profilePhotoUrls || [];
+      
+      // If new images are uploaded
       if (profileImages.length > 0) {
         try {
-          const photoUrls = await AuthService.uploadProfilePhotos(profileImages);
-          console.log('Yüklenen fotoğraf URLs:', photoUrls);
+          // Upload new images
+          const newPhotoUrls = await userProfileService.uploadProfilePhotos(profileImages);
+          
+          // Combine existing and new photos, maintaining order
+          photoUrls = [
+            ...photoUrls,  // Keep existing photos first
+            ...newPhotoUrls  // Add new photos at the end
+          ];
         } catch (error) {
-          console.error('Fotoğraf yükleme hatası:', error);
-          setShowError('Fotoğraflar yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+          const errorMessage = getErrorMessage(error);
+          setShowError(errorMessage);
           return;
         }
       }
 
-      const [firstName, ...lastNameParts] = formData.fullName.split(' ');
-      const lastName = lastNameParts.join(' ');
+      // Limit to 5 photos
+      photoUrls = photoUrls.slice(0, 5);
 
-      const updateData = {
-        firstName,
-        lastName,
-        email: formData.email,
+      // Prepare update data
+      const updateData: UpdateUserDTO = {
         bio: formData.bio,
         location: formData.location,
         interests: formData.interests,
-        socialLinks: formData.socialLinks,
-        notificationPreferences: formData.notificationPreferences
+        profilePhoto: photoUrls.length > 0 ? photoUrls[0] : undefined,
+        profilePhotos: photoUrls.length > 0 ? photoUrls : undefined,
+        notificationPreferences: {
+          emailNotifications: formData.notificationPreferences.emailNotifications ?? true,
+          pushNotifications: formData.notificationPreferences.pushNotifications ?? true,
+          weeklyRecommendations: formData.notificationPreferences.weeklyRecommendations ?? false
+        }
       };
 
-      await AuthService.updateProfile(updateData);
+      // Update profile and get the response
+      const response = await userProfileService.updateProfile(updateData);
+      
+      // Update profile photo URLs from the response
+      if (response.data.profilePhotos) {
+        setProfilePhotoUrls(response.data.profilePhotos);
+      }
+
       setShowSuccess(true);
       setIsDirty(false);
 
@@ -209,12 +227,36 @@ export function EditProfile({ user }: EditProfileProps) {
         navigate('/profile');
       }, 2000);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Profil güncellenirken bir hata oluştu';
+      const errorMessage = getErrorMessage(error);
       setShowError(errorMessage);
       console.error('Profil güncelleme hatası:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Update the ProfilePhotosSection props
+  const handleImagesChange = ({ existingUrls, newFiles }: { 
+    existingUrls: string[], 
+    newFiles: File[] 
+  }) => {
+    setProfilePhotoUrls(existingUrls);
+    setProfileImages(newFiles);
+    setIsDirty(true);
+  };
+
+  const isFormChanged = () => {
+    // Comprehensive and precise change detection
+    return (
+      formData.bio.trim() !== initialFormState.bio.trim() ||
+      formData.location.trim() !== initialFormState.location.trim() ||
+      JSON.stringify(formData.interests.sort()) !== JSON.stringify(initialFormState.interests.sort()) ||
+      profileImages.length > 0 ||
+      JSON.stringify(profilePhotoUrls.sort()) !== JSON.stringify(initialProfilePhotos.sort()) ||
+      formData.notificationPreferences.emailNotifications !== initialFormState.notificationPreferences.emailNotifications ||
+      formData.notificationPreferences.pushNotifications !== initialFormState.notificationPreferences.pushNotifications ||
+      formData.notificationPreferences.weeklyRecommendations !== initialFormState.notificationPreferences.weeklyRecommendations
+    );
   };
 
   return (
@@ -223,7 +265,8 @@ export function EditProfile({ user }: EditProfileProps) {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 transition-colors duration-200">
           <ProfilePhotosSection
             profileImages={profileImages}
-            onImagesChange={setProfileImages}
+            existingPhotoUrls={profilePhotoUrls}
+            onImagesChange={handleImagesChange}
             setShowError={setShowError}
           />
 
@@ -243,11 +286,6 @@ export function EditProfile({ user }: EditProfileProps) {
             onRemoveInterest={handleRemoveInterest}
           />
 
-          <SocialMediaSection
-            socialLinks={formData.socialLinks}
-            onChange={handleSocialLinkChange}
-          />
-
           <NotificationPreferencesSection
             preferences={formData.notificationPreferences}
             onChange={handleNotificationChange}
@@ -263,9 +301,11 @@ export function EditProfile({ user }: EditProfileProps) {
             </button>
             <button
               onClick={handleSaveChanges}
-              disabled={isLoading}
-              className={`px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+              disabled={isLoading || !isFormChanged()}
+              className={`px-6 py-2 rounded-lg transition-colors duration-200 
+                ${isLoading || !isFormChanged() 
+                  ? 'bg-gray-300 text-gray-500 cursor-default' 
+                  : 'bg-orange-500 text-white hover:bg-orange-600'}`}
             >
               {isLoading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
             </button>
